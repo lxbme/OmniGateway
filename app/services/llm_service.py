@@ -13,18 +13,19 @@ class LLMService:
     def __init__(self) -> None:
         if not settings.supports_openai_compatible:
             raise ValueError(
-                f"Unsupported LLM_PROVIDER: {settings.llm_provider}. "
+                f"Unsupported API_INTERFACE: {settings.api_interface}. "
                 "Only 'openai_compatible' is supported now."
             )
         self.client = AsyncOpenAI(
-            api_key=settings.llm_api_key,
-            base_url=settings.llm_base_url,
+            api_key=settings.api_key,
+            base_url=settings.api_base_url,
+            timeout=settings.request_timeout,
         )
 
     def resolve_model(self, requested_model: str | None) -> str:
         if requested_model and requested_model != "agent-core-v1":
             return requested_model
-        return settings.llm_model
+        return settings.default_model
 
     def build_chunk_payload(
         self,
@@ -56,9 +57,10 @@ class LLMService:
         chunk_id = f"chatcmpl-{uuid.uuid4().hex}"
         created = int(time.time())
         role_sent = False
-        model_name = self.resolve_model(request.model)
+        model_name = request.model or "unknown-model"
 
         try:
+            model_name = self.resolve_model(request.model)
             stream = await self.client.chat.completions.create(
                 model=model_name,
                 messages=[message.model_dump() for message in request.messages],
@@ -100,7 +102,7 @@ class LLMService:
                 chunk_id=chunk_id,
                 created=created,
                 model_name=model_name,
-                delta={"content": f"\n\n[服务器拦截报错] {str(exc)}"},
+                delta={"content": f"[网关拦截] 上游大模型服务异常: {str(exc)}"},
                 finish_reason="stop",
             )
 

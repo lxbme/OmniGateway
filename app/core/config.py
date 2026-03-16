@@ -12,23 +12,26 @@ if load_dotenv is not None:
 
 class Settings:
     def __init__(self) -> None:
-        self.llm_provider = os.getenv("LLM_PROVIDER", "openai_compatible")
-        self.llm_base_url = os.getenv(
-            "LLM_BASE_URL",
+        self.api_interface = os.getenv("API_INTERFACE", "openai_compatible")
+        self.api_base_url = os.getenv(
+            "API_BASE_URL",
             "https://open.bigmodel.cn/api/paas/v4/",
         )
-        self.llm_api_key = (
-            os.getenv("LLM_API_KEY")
-            or os.getenv("ZHIPUAI_API_KEY")
-            or os.getenv("ZHIPU_API_KEY")
+        self.api_key = (
+            os.getenv("API_KEY")
+            or os.getenv("LLM_API_KEY")
             or os.getenv("OPENAI_API_KEY")
             or "EMPTY"
         )
-        self.llm_model = os.getenv("LLM_MODEL", "glm-4-flash")
+        self.default_model = os.getenv("DEFAULT_MODEL")
+        self.request_timeout = float(os.getenv("API_TIMEOUT", "60"))
+
+        if not self.default_model:
+            raise ValueError("Missing required environment variable: DEFAULT_MODEL")
 
     @property
     def supports_openai_compatible(self) -> bool:
-        return self.llm_provider == "openai_compatible"
+        return self.api_interface == "openai_compatible"
 
 
 settings = Settings()

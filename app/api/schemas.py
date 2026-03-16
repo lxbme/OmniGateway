@@ -19,17 +19,7 @@ class ChatCompletionRequest(BaseModel):
     messages: List[ChatMessage] = Field(..., description="历史对话列表，最后一项为当前问题")
     stream: Optional[bool] = Field(default=False, description="是否使用 SSE 流式输出")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="大模型的发散度")
-    
+
     # 预留给后续 Agent 和 MCP 的扩展字段 (比如强行指定只用哪个工具)
     tool_choice: Optional[str] = None
-    
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "model": "agent-core-v1",
-                "messages": [{"role": "user", "content": "你好，请自我介绍"}],
-                "stream": True
-            }
-        }
-    }
     
