@@ -1,9 +1,13 @@
-.PHONY: init deploy down test-e2e test
+.PHONY: init deploy down test-e2e test pull
 
 PYTEST ?= pytest
 
 init:
 	git submodule update --init --recursive
+
+pull:
+	git pull origin main
+	git submodule update --recursive
 
 deploy:
 	docker compose up -d --build
