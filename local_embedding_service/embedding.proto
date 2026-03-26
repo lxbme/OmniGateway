@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package embedding;
+
+option cc_enable_arenas = true;
+
+import "google/protobuf/empty.proto";
+
+service EmbeddingService {
+  rpc GetEmbedding(EmbeddingRequest) returns (EmbeddingResponse);
+  rpc Info(google.protobuf.Empty) returns (InfoResponse);
+}
+
+message EmbeddingRequest {
+  string text = 1;
+}
+
+message EmbeddingResponse {
+  repeated float embedding = 1;
+  string error = 2;
+}
+
+message InfoResponse {
+  string provider = 1;
+  string model = 2;
+  int32 dimensions = 3;
+}

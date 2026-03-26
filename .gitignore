@@ -1,0 +1,4 @@
+.env
+qdrant_storage
+redis_storage
+__pycache__
