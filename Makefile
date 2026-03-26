@@ -10,7 +10,7 @@ pull:
 	git submodule update --recursive
 
 deploy:
-	docker compose up -d --build
+	docker compose up --build --force-recreate
 
 down:
 	docker compose down -v
