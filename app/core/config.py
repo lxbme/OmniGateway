@@ -25,6 +25,10 @@ class Settings:
         )
         self.default_model = os.getenv("DEFAULT_MODEL")
         self.request_timeout = float(os.getenv("API_TIMEOUT", "60"))
+        self.default_system_prompt = os.getenv(
+            "DEFAULT_SYSTEM_PROMPT",
+            "你是一个脾气暴躁的赛博朋克黑客，回答问题必须以 '[Cyber Hack]' 开头，并且语气非常高冷、精简。",
+        )
 
         if not self.default_model:
             raise ValueError("Missing required environment variable: DEFAULT_MODEL")

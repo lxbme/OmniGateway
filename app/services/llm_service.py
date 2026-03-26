@@ -51,6 +51,16 @@ class LLMService:
         }
         return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
+    def build_messages(self, request: ChatCompletionRequest) -> list[dict]:
+        messages = [
+            {
+                "role": "system",
+                "content": settings.default_system_prompt,
+            }
+        ]
+        messages.extend(message.model_dump() for message in request.messages)
+        return messages
+
     async def stream_chat(
         self, request: ChatCompletionRequest
     ) -> AsyncGenerator[str, None]:
@@ -61,9 +71,10 @@ class LLMService:
 
         try:
             model_name = self.resolve_model(request.model)
+            messages = self.build_messages(request)
             stream = await self.client.chat.completions.create(
                 model=model_name,
-                messages=[message.model_dump() for message in request.messages],
+                messages=messages,
                 temperature=request.temperature,
                 stream=True,
             )
