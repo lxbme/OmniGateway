@@ -223,7 +223,7 @@ Protobuf_PROTOC_EXECUTABLE:FILEPATH=/usr/bin/protoc
 Protobuf_PROTOC_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libprotoc.so
 
 //Use pre-generated protobuf/gRPC code
-USE_PREGENERATED_PROTO:BOOL=ON
+USE_PREGENERATED_PROTO:BOOL=OFF
 
 //Value Computed by CMake
 local_embedding_service_BINARY_DIR:STATIC=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build

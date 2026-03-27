@@ -69,33 +69,46 @@ include CMakeFiles/embedding_proto.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/embedding_proto.dir/flags.make
 
+generated/embedding.pb.cc: /home/liyufeng/go_projects/OmniGateway/local_embedding_service/proto/embedding.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating C++ protobuf and gRPC code from /home/liyufeng/go_projects/OmniGateway/local_embedding_service/proto/embedding.proto"
+	/usr/bin/protoc --proto_path=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/proto --cpp_out=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated --grpc_out=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated --plugin=protoc-gen-grpc=/usr/bin/grpc_cpp_plugin /home/liyufeng/go_projects/OmniGateway/local_embedding_service/proto/embedding.proto
+
+generated/embedding.pb.h: generated/embedding.pb.cc
+	@$(CMAKE_COMMAND) -E touch_nocreate generated/embedding.pb.h
+
+generated/embedding.grpc.pb.cc: generated/embedding.pb.cc
+	@$(CMAKE_COMMAND) -E touch_nocreate generated/embedding.grpc.pb.cc
+
+generated/embedding.grpc.pb.h: generated/embedding.pb.cc
+	@$(CMAKE_COMMAND) -E touch_nocreate generated/embedding.grpc.pb.h
+
 CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o: CMakeFiles/embedding_proto.dir/flags.make
-CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o: /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.pb.cc
+CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o: generated/embedding.pb.cc
 CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o: CMakeFiles/embedding_proto.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o -MF CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o.d -o CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o -c /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o -MF CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o.d -o CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o -c /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated/embedding.pb.cc
 
 CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.pb.cc > CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated/embedding.pb.cc > CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.i
 
 CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.pb.cc -o CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated/embedding.pb.cc -o CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.s
 
 CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o: CMakeFiles/embedding_proto.dir/flags.make
-CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o: /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.grpc.pb.cc
+CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o: generated/embedding.grpc.pb.cc
 CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o: CMakeFiles/embedding_proto.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o -MF CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o.d -o CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o -c /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.grpc.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o -MF CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o.d -o CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o -c /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated/embedding.grpc.pb.cc
 
 CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.grpc.pb.cc > CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated/embedding.grpc.pb.cc > CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.i
 
 CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/liyufeng/go_projects/OmniGateway/local_embedding_service/generated/embedding.grpc.pb.cc -o CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/generated/embedding.grpc.pb.cc -o CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.s
 
 # Object files for target embedding_proto
 embedding_proto_OBJECTS = \
@@ -109,7 +122,7 @@ libembedding_proto.a: CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o
 libembedding_proto.a: CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o
 libembedding_proto.a: CMakeFiles/embedding_proto.dir/build.make
 libembedding_proto.a: CMakeFiles/embedding_proto.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX static library libembedding_proto.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libembedding_proto.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/embedding_proto.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/embedding_proto.dir/link.txt --verbose=$(VERBOSE)
 
@@ -121,7 +134,10 @@ CMakeFiles/embedding_proto.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles/embedding_proto.dir/cmake_clean.cmake
 .PHONY : CMakeFiles/embedding_proto.dir/clean
 
-CMakeFiles/embedding_proto.dir/depend:
+CMakeFiles/embedding_proto.dir/depend: generated/embedding.grpc.pb.cc
+CMakeFiles/embedding_proto.dir/depend: generated/embedding.grpc.pb.h
+CMakeFiles/embedding_proto.dir/depend: generated/embedding.pb.cc
+CMakeFiles/embedding_proto.dir/depend: generated/embedding.pb.h
 	cd /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/liyufeng/go_projects/OmniGateway/local_embedding_service /home/liyufeng/go_projects/OmniGateway/local_embedding_service /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build /home/liyufeng/go_projects/OmniGateway/local_embedding_service/build/CMakeFiles/embedding_proto.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/embedding_proto.dir/depend
 

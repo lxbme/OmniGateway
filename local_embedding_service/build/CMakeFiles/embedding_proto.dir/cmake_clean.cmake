@@ -3,6 +3,10 @@ file(REMOVE_RECURSE
   "CMakeFiles/embedding_proto.dir/generated/embedding.grpc.pb.cc.o.d"
   "CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o"
   "CMakeFiles/embedding_proto.dir/generated/embedding.pb.cc.o.d"
+  "generated/embedding.grpc.pb.cc"
+  "generated/embedding.grpc.pb.h"
+  "generated/embedding.pb.cc"
+  "generated/embedding.pb.h"
   "libembedding_proto.a"
   "libembedding_proto.pdb"
 )

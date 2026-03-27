@@ -13,13 +13,15 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY local_embedding_service ./local_embedding_service
+COPY . ./local_embedding_service
 
 RUN g++ -std=c++17 -O2 -pthread \
-      local_embedding_service/main.cpp \
-      local_embedding_service/embedding.pb.cc \
-      local_embedding_service/embedding.grpc.pb.cc \
-      -I/app/local_embedding_service \
+      local_embedding_service/src/main.cpp \
+      local_embedding_service/src/embedding_service_impl.cpp \
+      local_embedding_service/generated/embedding.pb.cc \
+      local_embedding_service/generated/embedding.grpc.pb.cc \
+      -I/app/local_embedding_service/include \
+      -I/app/local_embedding_service/generated \
       $(pkg-config --cflags protobuf grpc++) \
       $(pkg-config --libs protobuf grpc++) \
       -o /usr/local/bin/local_embedding_service
