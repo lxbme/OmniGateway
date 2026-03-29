@@ -4,3 +4,4 @@ redis_storage
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.vscode/
