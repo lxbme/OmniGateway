@@ -29,7 +29,7 @@ make pull
 make deploy
 ```
 
-停止并清理容器、网络、卷时，执行：
+停止并清理容器、网络、卷时,执行：
 
 ```bash
 make down
