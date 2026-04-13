@@ -23,8 +23,9 @@ class LLMService:
         )
 
     def resolve_model(self, requested_model: str | None) -> str:
-        if requested_model and requested_model != "agent-core-v1":
-            return requested_model
+        normalized_model = (requested_model or "").strip()
+        if normalized_model and normalized_model != "agent-core-v1":
+            return normalized_model
         return settings.default_model
 
     def build_chunk_payload(
@@ -60,6 +61,39 @@ class LLMService:
         ]
         messages.extend(message.model_dump() for message in request.messages)
         return messages
+
+    async def generate_reply(
+        self,
+        *,
+        messages: list[dict],
+        model: str | None = None,
+        temperature: float | None = 0.7,
+    ) -> str:
+        model_name = self.resolve_model(model)
+        response = await self.client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            temperature=temperature,
+            stream=False,
+        )
+
+        choice = response.choices[0] if response.choices else None
+        if choice is None or choice.message is None:
+            return ""
+
+        content = choice.message.content
+        if isinstance(content, str):
+            return content
+
+        if isinstance(content, list):
+            parts: list[str] = []
+            for item in content:
+                text_value = getattr(item, "text", None)
+                if text_value:
+                    parts.append(text_value)
+            return "".join(parts)
+
+        return ""
 
     async def stream_chat(
         self, request: ChatCompletionRequest

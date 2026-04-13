@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from urllib.parse import urlparse, urlunparse
 
 try:
     from dotenv import load_dotenv
@@ -7,23 +9,84 @@ except ImportError:  # pragma: no cover
 
 
 if load_dotenv is not None:
-    load_dotenv()
+    repo_env_path = Path(__file__).resolve().parents[3] / ".env"
+    load_dotenv(dotenv_path=repo_env_path, override=True)
+
+
+def _is_truthy(value: str | None) -> bool:
+    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _clean_env(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
+
+
+def _running_in_container() -> bool:
+    return os.path.exists("/.dockerenv")
+
+
+def _normalize_base_url(value: str) -> str:
+    return value.rstrip("/")
+
+
+def _derive_base_url_from_completion_endpoint(endpoint: str | None) -> str | None:
+    if not endpoint:
+        return None
+
+    parsed = urlparse(endpoint)
+    if not parsed.scheme or not parsed.netloc:
+        return None
+
+    path = parsed.path.rstrip("/")
+    suffix = "/chat/completions"
+    if path.endswith(suffix):
+        path = path[: -len(suffix)]
+
+    return urlunparse((parsed.scheme, parsed.netloc, path or "/v1", "", "", "")).rstrip("/")
+
+
+def resolve_api_base_url() -> str:
+    explicit_local = (
+        os.getenv("GRAPH_API_BASE_URL")
+        or os.getenv("LOCAL_LLM_BASE_URL")
+        or os.getenv("LOCAL_GATEWAY_BASE_URL")
+    )
+    if explicit_local:
+        return _normalize_base_url(explicit_local)
+
+    prefer_local_gateway = _is_truthy(os.getenv("PREFER_LOCAL_GATEWAY"))
+    completion_endpoint = os.getenv("COMPL_ENDPOINT")
+
+    if prefer_local_gateway:
+        derived_base_url = _derive_base_url_from_completion_endpoint(completion_endpoint)
+        if _running_in_container():
+            if derived_base_url and "upstream-service" in derived_base_url:
+                return derived_base_url
+            return "http://upstream-service:18080/v1"
+        return "http://127.0.0.1:8000/v1"
+
+    return _normalize_base_url(
+        os.getenv(
+            "API_BASE_URL",
+            "https://open.bigmodel.cn/api/paas/v4/",
+        )
+    )
 
 
 class Settings:
     def __init__(self) -> None:
-        self.api_interface = os.getenv("API_INTERFACE", "openai_compatible")
-        self.api_base_url = os.getenv(
-            "API_BASE_URL",
-            "https://open.bigmodel.cn/api/paas/v4/",
-        )
+        self.api_interface = _clean_env(os.getenv("API_INTERFACE")) or "openai_compatible"
+        self.api_base_url = resolve_api_base_url()
         self.api_key = (
-            os.getenv("API_KEY")
-            or os.getenv("LLM_API_KEY")
-            or os.getenv("OPENAI_API_KEY")
+            _clean_env(os.getenv("API_KEY"))
+            or _clean_env(os.getenv("LLM_API_KEY"))
+            or _clean_env(os.getenv("OPENAI_API_KEY"))
             or "EMPTY"
         )
-        self.default_model = os.getenv("DEFAULT_MODEL")
+        self.default_model = _clean_env(os.getenv("DEFAULT_MODEL"))
         self.request_timeout = float(os.getenv("API_TIMEOUT", "60"))
         self.default_system_prompt = os.getenv(
             "DEFAULT_SYSTEM_PROMPT",
