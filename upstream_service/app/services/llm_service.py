@@ -1,7 +1,7 @@
 import json
 import time
 import uuid
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from openai import AsyncOpenAI
 
@@ -94,6 +94,52 @@ class LLMService:
             return "".join(parts)
 
         return ""
+
+    async def generate_message(
+        self,
+        *,
+        messages: list[dict],
+        model: str | None = None,
+        temperature: float | None = 0.7,
+        tools: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        model_name = self.resolve_model(model)
+        request_kwargs: dict[str, Any] = {
+            "model": model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": False,
+        }
+        if tools:
+            request_kwargs["tools"] = tools
+            request_kwargs["tool_choice"] = "auto"
+
+        response = await self.client.chat.completions.create(**request_kwargs)
+        choice = response.choices[0] if response.choices else None
+        if choice is None or choice.message is None:
+            return {"role": "assistant", "content": ""}
+
+        message = choice.message
+        payload: dict[str, Any] = {
+            "role": "assistant",
+            "content": message.content or "",
+        }
+
+        tool_calls = getattr(message, "tool_calls", None)
+        if tool_calls:
+            payload["tool_calls"] = [
+                {
+                    "id": tool_call.id,
+                    "type": tool_call.type,
+                    "function": {
+                        "name": tool_call.function.name,
+                        "arguments": tool_call.function.arguments,
+                    },
+                }
+                for tool_call in tool_calls
+            ]
+
+        return payload
 
     async def stream_chat(
         self, request: ChatCompletionRequest

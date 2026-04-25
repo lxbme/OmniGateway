@@ -1,6 +1,7 @@
 import traceback
 
 from app.agent.state import AgentState
+from app.agent.tools import AVAILABLE_TOOLS, execute_tool, parse_tool_arguments
 from app.core.config import settings
 from app.services.llm_service import llm_service
 from app.services.rag_service import (
@@ -59,6 +60,7 @@ def input_node(state: AgentState) -> AgentState:
         "next_step": "context_node",
         "model": state.get("model"),
         "temperature": state.get("temperature"),
+        "tool_rounds": state.get("tool_rounds", 0),
         "final_response": state.get("final_response"),
     }
 
@@ -72,6 +74,7 @@ def context_node(state: AgentState) -> AgentState:
         "next_step": "llm_node",
         "model": state.get("model"),
         "temperature": state.get("temperature"),
+        "tool_rounds": state.get("tool_rounds", 0),
         "final_response": state.get("final_response"),
     }
 
@@ -85,30 +88,72 @@ async def llm_node(state: AgentState) -> AgentState:
     messages = [{"role": "system", "content": system_prompt}, *state.get("messages", [])]
 
     try:
-        reply = await llm_service.generate_reply(
+        assistant_message = await llm_service.generate_message(
             messages=messages,
             model=state.get("model"),
             temperature=state.get("temperature", 0.7),
+            tools=AVAILABLE_TOOLS,
         )
-        reply = ensure_cyber_hack_style(reply)
+        if not assistant_message.get("tool_calls"):
+            assistant_message["content"] = ensure_cyber_hack_style(
+                str(assistant_message.get("content") or "")
+            )
+        can_call_tool = state.get("tool_rounds", 0) < 1
+        next_step = "action_node" if assistant_message.get("tool_calls") and can_call_tool else "output_node"
     except AssertionError:
         traceback.print_exc()
         raise
     except Exception:
-        reply = f"{CYBER_HACK_PREFIX} 核心链路断开，该死的服务器又在装死。"
+        assistant_message = {
+            "role": "assistant",
+            "content": f"{CYBER_HACK_PREFIX} 核心链路断开，该死的服务器又在装死。",
+        }
+        next_step = "output_node"
 
     updated_messages = [
         *state.get("messages", []),
-        {"role": "assistant", "content": reply},
+        assistant_message,
     ]
 
     return {
         "messages": updated_messages,
         "documents": state.get("documents", []),
         "context_text": state.get("context_text", ""),
-        "next_step": "output_node",
+        "next_step": next_step,
         "model": state.get("model"),
         "temperature": state.get("temperature"),
+        "tool_rounds": state.get("tool_rounds", 0),
+        "final_response": state.get("final_response"),
+    }
+
+
+def action_node(state: AgentState) -> AgentState:
+    messages = state.get("messages", [])
+    last_message = messages[-1] if messages else {}
+    tool_messages = []
+
+    for tool_call in last_message.get("tool_calls", []) or []:
+        function_info = tool_call.get("function", {})
+        tool_name = function_info.get("name", "")
+        arguments = parse_tool_arguments(function_info.get("arguments"))
+        result = execute_tool(tool_name, arguments)
+        tool_messages.append(
+            {
+                "role": "tool",
+                "tool_call_id": tool_call.get("id"),
+                "name": tool_name,
+                "content": result,
+            }
+        )
+
+    return {
+        "messages": [*messages, *tool_messages],
+        "documents": state.get("documents", []),
+        "context_text": state.get("context_text", ""),
+        "next_step": "llm_node",
+        "model": state.get("model"),
+        "temperature": state.get("temperature"),
+        "tool_rounds": state.get("tool_rounds", 0) + 1,
         "final_response": state.get("final_response"),
     }
 
@@ -129,5 +174,6 @@ def output_node(state: AgentState) -> AgentState:
         "next_step": "end",
         "model": state.get("model"),
         "temperature": state.get("temperature"),
+        "tool_rounds": state.get("tool_rounds", 0),
         "final_response": final_response,
     }
