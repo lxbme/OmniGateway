@@ -36,4 +36,27 @@ std::vector<int64_t> SimpleTokenizer::Encode(const std::string& text) {
   return token_ids;
 }
 
+TokenPairEncoding ITokenizer::EncodePair(const std::string& text_a,
+                                         const std::string& text_b) {
+  std::string combined = text_a + " " + text_b;
+  auto ids = Encode(combined);
+  TokenPairEncoding result;
+  result.input_ids = ids;
+  result.token_type_ids.assign(ids.size(), 0);
+  result.attention_mask.assign(ids.size(), 1);
+
+  int max_len = GetMaxLength();
+  if (static_cast<int>(result.input_ids.size()) > max_len) {
+    result.input_ids.resize(static_cast<size_t>(max_len));
+    result.token_type_ids.resize(static_cast<size_t>(max_len));
+    result.attention_mask.resize(static_cast<size_t>(max_len));
+  } else {
+    size_t pad = static_cast<size_t>(max_len) - result.input_ids.size();
+    result.input_ids.insert(result.input_ids.end(), pad, 0);
+    result.token_type_ids.insert(result.token_type_ids.end(), pad, 0);
+    result.attention_mask.insert(result.attention_mask.end(), pad, 0);
+  }
+  return result;
+}
+
 }  // namespace embedding_service

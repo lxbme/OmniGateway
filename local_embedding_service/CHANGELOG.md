@@ -2,7 +2,49 @@
 
 All notable changes to the Local Embedding Service project will be documented in this file.
 
-## [v4.10.0] - 2026-04-25
+## [v4.11.0] - 2026-05-12
+
+### Added - Issue #18 Rerank ONNX 推理与多模型切换
+- ✅ 新增 `IRerankBackend` 抽象接口 (`include/rerank_backend.h`)
+  - `Rerank(query, documents, top_k, results, error_msg)` — 对文档列表打分排序
+  - `GetProvider()`, `GetModel()` — 获取后端信息
+- ✅ 新增 `MockRerankBackend` (`include/mock_rerank_backend.h`, `src/mock_rerank_backend.cpp`)
+  - 基于 token overlap 的启发式排序（保持与 v4.10.0 兼容）
+  - 通过 `LOCAL_RERANK_MODEL` 环境变量配置
+- ✅ 新增 `OnnxRerankBackend` (`include/onnx_rerank_backend.h`, `src/onnx_rerank_backend.cpp`)
+  - ONNX Runtime 跨编码器（cross-encoder）推理
+  - 自动检测输出格式：单 score 或双 logits（softmax 转换）
+  - 支持通过环境变量切换模型：`LOCAL_RERANK_MODEL_PATH`, `LOCAL_RERANK_MODEL`
+- ✅ 新增 `BertTokenizer` (`include/bert_tokenizer.h`, `src/bert_tokenizer.cpp`)
+  - 基于 WordPiece 算法的分词器
+  - 读取标准 `vocab.txt` 格式词表
+  - 支持 `EncodePair(query, document)` 生成跨编码器输入（input_ids + token_type_ids + attention_mask）
+  - 自动处理 CJK 字符、标点符号分割
+- ✅ `ITokenizer` 接口扩展：新增 `TokenPairEncoding` 结构体和 `EncodePair()` 虚方法
+
+### Changed
+- 🔄 `EmbeddingServiceImpl::Rerank()` 重构为委托 `IRerankBackend` 接口
+- 🔄 构造函数新增 rerank 后端初始化，ONNX 模式自动选择 `OnnxRerankBackend`，失败时回退至 `MockRerankBackend`
+- 🔄 移除 `embedding_service_impl.cpp` 中的内联启发式 rerank 逻辑
+- 🔄 `CMakeLists.txt` 新增 `mock_rerank_backend.cpp`, `bert_tokenizer.cpp`, `onnx_rerank_backend.cpp` 编译
+
+### Documentation
+- ✅ `USE_GUIDE.md` 新增 Rerank ONNX 配置章节
+- ✅ `ONNX_SETUP.md` 新增跨编码器模型配置说明
+- ✅ `README.md` 更新 Issue #18 验收状态
+- ✅ `test_all_features.sh` 新增 Rerank 推理实现文件检查
+
+### Testing
+- ✅ 新增文件结构检查：`IRerankBackend`, `MockRerankBackend`, `OnnxRerankBackend`, `BertTokenizer`
+- ✅ 新增运行时得分验证：rerank 返回数值分数并降序排列
+- ✅ 保持现有 mock 模式下 rerank 行为完全兼容
+
+### Known Limitations
+- `BertTokenizer` 为基础 WordPiece 实现，高级特性（lowercase/uncase 自动检测、NFC 归一化）可后续增强
+- 跨编码器逐对推理（未使用 batch），大规模文档时性能可优化
+
+---
+
 
 ### Added - Issue #17 Rerank 接口与批量排序
 - ✅ 新增 `Rerank(RerankRequest) -> RerankResponse` gRPC 接口

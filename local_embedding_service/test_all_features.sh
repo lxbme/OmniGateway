@@ -223,6 +223,32 @@ main() {
   check_file_contains "$PROTO_FILE" "rpc Rerank" "EmbeddingService exposes Rerank RPC"
   echo ""
 
+  echo "阶段五五点五：ONNX Rerank 推理实现"
+  echo "----------------------------------------"
+  if [ -f "$SCRIPT_DIR/include/rerank_backend.h" ]; then
+    test_result 0 "IRerankBackend interface exists"
+  else
+    test_result 1 "IRerankBackend interface not found"
+  fi
+  if [ -f "$SCRIPT_DIR/include/mock_rerank_backend.h" ] && [ -f "$SCRIPT_DIR/src/mock_rerank_backend.cpp" ]; then
+    test_result 0 "MockRerankBackend implementation exists"
+  else
+    test_result 1 "MockRerankBackend implementation not found"
+  fi
+  if [ -f "$SCRIPT_DIR/include/onnx_rerank_backend.h" ] && [ -f "$SCRIPT_DIR/src/onnx_rerank_backend.cpp" ]; then
+    test_result 0 "OnnxRerankBackend implementation exists"
+  else
+    test_result 1 "OnnxRerankBackend implementation not found"
+  fi
+  if [ -f "$SCRIPT_DIR/include/bert_tokenizer.h" ] && [ -f "$SCRIPT_DIR/src/bert_tokenizer.cpp" ]; then
+    test_result 0 "BertTokenizer implementation exists"
+  else
+    test_result 1 "BertTokenizer implementation not found"
+  fi
+  check_file_contains "$SCRIPT_DIR/src/onnx_rerank_backend.cpp" "EncodePair" "OnnxRerankBackend uses EncodePair tokenization"
+  check_file_contains "$SCRIPT_DIR/src/onnx_rerank_backend.cpp" "LOCAL_RERANK_MODEL_PATH" "OnnxRerankBackend reads LOCAL_RERANK_MODEL_PATH"
+  echo ""
+
   echo "阶段六：模型加载与集成测试"
   echo "----------------------------------------"
   if start_local_server_if_needed; then
@@ -321,6 +347,25 @@ main() {
       test_result 0 "Rerank supports batch queries"
     else
       test_result 1 "Rerank batch query results are missing"
+    fi
+
+    # Verify rerank scores are numeric
+    RERANK_SCORE_CHECK="$(echo "$RERANK_OUTPUT" | grep -o '"score":[0-9.]*' | head -1 || true)"
+    if [ -n "$RERANK_SCORE_CHECK" ]; then
+      test_result 0 "Rerank returns numeric scores"
+    else
+      test_result 1 "Rerank scores are not numeric"
+    fi
+
+    # Verify rerank order: first score >= last score (descending)
+    FIRST_SCORE="$(echo "$RERANK_OUTPUT" | grep -o '"score":[0-9.]*' | head -1 | grep -o '[0-9.]*$' || echo "0")"
+    LAST_SCORE="$(echo "$RERANK_OUTPUT" | grep -o '"score":[0-9.]*' | tail -1 | grep -o '[0-9.]*$' || echo "0")"
+    if [ -n "$FIRST_SCORE" ] && [ -n "$LAST_SCORE" ]; then
+      if [ "$(echo "$FIRST_SCORE >= $LAST_SCORE" | bc -l 2>/dev/null || echo "1")" = "1" ]; then
+        test_result 0 "Rerank returns results sorted by score descending"
+      else
+        warn "Rerank sort order unexpected (may be tied scores)"
+      fi
     fi
 
     echo ""

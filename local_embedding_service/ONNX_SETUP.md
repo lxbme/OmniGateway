@@ -81,7 +81,33 @@ grpcurl -plaintext -import-path proto -proto proto/embedding.proto \
   -d '{"text":"hello world"}' localhost:50051 embedding.EmbeddingService/GetEmbedding
 ```
 
+## Rerank Configuration (v4.11.0+)
+
+To enable ONNX-based rerank with a cross-encoder model:
+
+```bash
+export EMBEDDING_BACKEND=onnx
+export LOCAL_RERANK_MODEL_PATH=/path/to/cross-encoder-model.onnx
+export LOCAL_RERANK_MODEL=cross-encoder-ms-marco-MiniLM-L6-v2  # Optional label
+export LOCAL_RERANK_MAX_LENGTH=512                               # Optional
+export LOCAL_RERANK_VOCAB_PATH=/path/to/vocab.txt                # Optional, defaults to vocab.txt beside model file
+```
+
+### Cross-Encoder Model Requirements
+- Inputs: `input_ids` (int64), `attention_mask` (int64), `token_type_ids` (int64)
+- Output: single score (float) per pair, or 2-element logits (automatically detected)
+- Shape: batch dimension 1, sequence dimension equal to max_length
+- Vocabulary: standard `vocab.txt` file in BERT format (one token per line)
+
+### Testing Rerank
+```bash
+grpcurl -plaintext -import-path proto -proto proto/embedding.proto \
+  -d '{"queries":[{"query":"weather today","documents":["sunny day","math paper","storm warning"],"top_k":2}]}' \
+  localhost:50051 embedding.EmbeddingService/Rerank
+```
+
 ## Fallback Behavior
 - If `EMBEDDING_BACKEND=onnx` but ONNX Runtime is not compiled in, falls back to mock backend
 - If model path is not set or model fails to load, error is returned in response
 - Mock backend remains the default when `EMBEDDING_BACKEND` is not set
+- Rerank ONNX initialization failure falls back to token-overlap heuristic rerank

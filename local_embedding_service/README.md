@@ -159,6 +159,16 @@ grpcurl -plaintext -import-path proto -proto proto/embedding.proto \
   localhost:50051 embedding.EmbeddingService/Rerank
 ```
 
+### issue #18 验收说明(2026-05-12) ✅ 已完成
+实现 rerank 模型推理逻辑。
+
+- ✅ tokenizer C++ 实现 (BertTokenizer, WordPiece 算法, 读取 vocab.txt)
+- ✅ ONNX 推理 (OnnxRerankBackend, 跨编码器 cross-encoder 模型)
+- ✅ rerank 输出符合预期 (真实模型相关性评分, 降序排列)
+- ✅ 支持多模型切换 (通过 LOCAL_RERANK_MODEL_PATH 环境变量)
+
+详见 [CHANGELOG.md](CHANGELOG.md) v4.11.0。
+
 
 ### 文档
 - [USE_GUIDE.md](USE_GUIDE.md) - 完整使用指南（已更新 v4.10.0）

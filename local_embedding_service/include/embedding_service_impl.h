@@ -9,6 +9,7 @@
 
 #include "embedding.grpc.pb.h"
 #include "embedding_backend.h"
+#include "rerank_backend.h"
 
 namespace embedding_service {
 
@@ -32,6 +33,7 @@ class EmbeddingServiceImpl final : public embedding::EmbeddingService::Service {
 
  private:
   std::unique_ptr<IEmbeddingBackend> backend_;
+  std::unique_ptr<IRerankBackend> rerank_backend_;
   std::string init_error_;
 };
 
