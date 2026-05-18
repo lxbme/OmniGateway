@@ -112,11 +112,16 @@ target_link_libraries(embedding_proto
 add_library(embedding_service_impl
   src/embedding_service_impl.cpp
   src/mock_embedding_backend.cpp
+  src/mock_rerank_backend.cpp
   src/tokenizer.cpp
+  src/bert_tokenizer.cpp
 )
 
 if(EMBEDDING_WITH_ONNXRUNTIME)
-  target_sources(embedding_service_impl PRIVATE src/onnx_embedding_backend.cpp)
+  target_sources(embedding_service_impl PRIVATE
+    src/onnx_embedding_backend.cpp
+    src/onnx_rerank_backend.cpp
+  )
   target_compile_definitions(embedding_service_impl PRIVATE ENABLE_ONNX_BACKEND)
   
   if(ONNXRUNTIME_LIBS)

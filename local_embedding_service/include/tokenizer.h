@@ -6,11 +6,20 @@
 
 namespace embedding_service {
 
+struct TokenPairEncoding {
+  std::vector<int64_t> input_ids;
+  std::vector<int64_t> token_type_ids;
+  std::vector<int64_t> attention_mask;
+};
+
 class ITokenizer {
  public:
   virtual ~ITokenizer() = default;
 
   virtual std::vector<int64_t> Encode(const std::string& text) = 0;
+
+  virtual TokenPairEncoding EncodePair(const std::string& text_a,
+                                       const std::string& text_b);
 
   virtual int GetMaxLength() const = 0;
 };

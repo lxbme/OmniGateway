@@ -1,48 +1,20 @@
 #include "embedding_service_impl.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 #include "mock_embedding_backend.h"
+#include "mock_rerank_backend.h"
 
 #ifdef ENABLE_ONNX_BACKEND
 #include "onnx_embedding_backend.h"
+#include "onnx_rerank_backend.h"
 #endif
 
 namespace embedding_service {
-
-namespace {
-
-std::vector<std::string> TokenizeForRerank(const std::string& text) {
-  std::vector<std::string> tokens;
-  std::string current;
-  current.reserve(text.size());
-  for (unsigned char ch : text) {
-    if (std::isalnum(ch)) {
-      current.push_back(static_cast<char>(std::tolower(ch)));
-    } else if (!current.empty()) {
-      tokens.push_back(current);
-      current.clear();
-    }
-  }
-  if (!current.empty()) {
-    tokens.push_back(current);
-  }
-  return tokens;
-}
-
-std::unordered_set<std::string> TokenSetForRerank(const std::string& text) {
-  std::vector<std::string> tokens = TokenizeForRerank(text);
-  return std::unordered_set<std::string>(tokens.begin(), tokens.end());
-}
-
-}  // namespace
 
 static std::string ReadStringEnv(const char* name, const char* default_value) {
   const char* value = std::getenv(name);
@@ -94,6 +66,30 @@ EmbeddingServiceImpl::EmbeddingServiceImpl() {
               << backend_->GetProvider() << ", model=" << backend_->GetModel()
               << ", dimensions=" << backend_->GetDimensions() << std::endl;
   }
+
+  // Initialize rerank backend
+  if (onnx_requested) {
+#ifdef ENABLE_ONNX_BACKEND
+    rerank_backend_ = std::make_unique<OnnxRerankBackend>();
+    std::cout << "[Info] Using ONNX rerank backend" << std::endl;
+#endif
+  }
+  if (!rerank_backend_) {
+    rerank_backend_ = std::make_unique<MockRerankBackend>();
+    std::cout << "[Info] Using mock rerank backend" << std::endl;
+  }
+
+  std::string rerank_error;
+  if (!rerank_backend_->Init(&rerank_error)) {
+    std::cerr << "[Warning] Rerank backend init failed: " << rerank_error
+              << ". Falling back to mock rerank backend." << std::endl;
+    rerank_backend_ = std::make_unique<MockRerankBackend>();
+    std::string mock_error;
+    rerank_backend_->Init(&mock_error);
+  }
+  std::cout << "[Info] Rerank backend initialized: provider="
+            << rerank_backend_->GetProvider()
+            << ", model=" << rerank_backend_->GetModel() << std::endl;
 }
 
 grpc::Status EmbeddingServiceImpl::GetEmbedding(
@@ -161,12 +157,17 @@ grpc::Status EmbeddingServiceImpl::GetEmbeddings(
   return grpc::Status::OK;
 }
 
-grpc::Status EmbeddingServiceImpl::Rerank(grpc::ServerContext*,
-                                          const embedding::RerankRequest* request,
-                                          embedding::RerankResponse* response) {
+grpc::Status EmbeddingServiceImpl::Rerank(
+    grpc::ServerContext*, const embedding::RerankRequest* request,
+    embedding::RerankResponse* response) {
   const int query_count = request->queries_size();
   if (query_count <= 0) {
     response->set_error("queries must not be empty");
+    return grpc::Status::OK;
+  }
+
+  if (!rerank_backend_) {
+    response->set_error("rerank backend not initialized");
     return grpc::Status::OK;
   }
 
@@ -181,48 +182,25 @@ grpc::Status EmbeddingServiceImpl::Rerank(grpc::ServerContext*,
       continue;
     }
 
-    const auto query_tokens = TokenSetForRerank(query.query());
-    if (query_tokens.empty()) {
-      result->set_error("query must not be empty");
+    std::vector<std::string> docs;
+    docs.reserve(static_cast<size_t>(query.documents_size()));
+    for (const auto& doc : query.documents()) {
+      docs.push_back(doc);
+    }
+
+    std::vector<RerankItem> backend_results;
+    std::string error_msg;
+    if (!rerank_backend_->Rerank(query.query(), docs, query.top_k(),
+                                 &backend_results, &error_msg)) {
+      result->set_error(error_msg);
       continue;
     }
 
-    struct Candidate {
-      int index;
-      std::string document;
-      float score;
-    };
-
-    std::vector<Candidate> candidates;
-    candidates.reserve(static_cast<size_t>(query.documents_size()));
-    for (int i = 0; i < query.documents_size(); ++i) {
-      const std::string& document = query.documents(i);
-      const auto doc_tokens = TokenSetForRerank(document);
-      int overlap = 0;
-      for (const auto& token : doc_tokens) {
-        if (query_tokens.count(token) > 0) {
-          ++overlap;
-        }
-      }
-      candidates.push_back({i, document, static_cast<float>(overlap)});
-    }
-
-    std::stable_sort(candidates.begin(), candidates.end(),
-                     [](const Candidate& lhs, const Candidate& rhs) {
-                       return lhs.score > rhs.score;
-                     });
-
-    int top_k = query.top_k();
-    if (top_k <= 0 || top_k > static_cast<int>(candidates.size())) {
-      top_k = static_cast<int>(candidates.size());
-    }
-
-    for (int i = 0; i < top_k; ++i) {
-      const auto& candidate = candidates[static_cast<size_t>(i)];
-      auto* item = result->add_items();
-      item->set_index(candidate.index);
-      item->set_document(candidate.document);
-      item->set_score(candidate.score);
+    for (const auto& item : backend_results) {
+      auto* pb_item = result->add_items();
+      pb_item->set_index(item.index);
+      pb_item->set_document(item.document);
+      pb_item->set_score(item.score);
     }
     result->set_error("");
   }
